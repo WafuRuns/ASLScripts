@@ -13,6 +13,12 @@ state("arx", "1.0")
     float progressBar : 0x47DE0C;
 }
 
+update
+{
+    if (current.progressBar != 0)
+        vars.crash = false;
+}
+
 init
 {
     if (modules.First().ModuleMemorySize == 8790016)
@@ -25,10 +31,11 @@ init
 
 exit
 {
+    vars.crash = true;
     timer.IsGameTimePaused = true;
 }
 
 isLoading
 {
-    return current.progressBar != 0;
+    return current.progressBar != 0 || vars.crash;
 }
