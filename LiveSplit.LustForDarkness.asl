@@ -20,3 +20,8 @@ isLoading
 {
     return vars.loading;
 }
+
+exit
+{
+    timer.IsGameTimePaused = true;
+}
