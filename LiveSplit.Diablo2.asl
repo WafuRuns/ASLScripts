@@ -32,14 +32,21 @@ state("Game", "1.14d")
 
 init
 {
-    if(modules.First().FileVersionInfo.FileVersion == "1.14.0.64")
-        version = "1.14a";
-    if(modules.First().FileVersionInfo.FileVersion == "1.14.1.68")
-        version = "1.14b";
-    if(modules.First().FileVersionInfo.FileVersion == "1.14.2.70")
-        version = "1.14c";
-    if(modules.First().FileVersionInfo.FileVersion == "1.14.3.71")
-        version = "1.14d";
+    switch (modules.First().FileVersionInfo.FileVersion)
+    {
+        case "1.14.0.64":
+            version = "1.14a";
+            break;
+        case "1.14.1.68":
+            version = "1.14b";
+            break;
+        case "1.14.2.70":
+            version = "1.14c";
+            break;
+        case "1.14.3.71":
+            version = "1.14d";
+            break;
+    }
 }
 
 isLoading
