@@ -28,6 +28,7 @@ state("Game", "1.14d")
     bool saving : 0x3792F8;
     bool saving2 : 0x3786D0;
     bool inGame : 0x30EE8C;
+    bool inMenu : 0x379970;
 }
 
 init
@@ -51,7 +52,7 @@ init
 
 isLoading
 {
-    return current.loading || ((current.saving || current.saving2) && !current.inGame);
+    return (current.loading || ((current.saving || current.saving2) && !current.inGame)) && !current.inMenu;
 }
 
 exit
