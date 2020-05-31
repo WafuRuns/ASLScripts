@@ -4,6 +4,7 @@ state("Game", "1.14a")
     bool saving : 0x37D110;
     bool saving2 : 0x37DD30;
     bool inGame: 0x30A45C;
+    bool inMenu : 0x478B70;
 }
 
 state("Game", "1.14b")
@@ -12,6 +13,7 @@ state("Game", "1.14b")
     bool saving : 0x370760;
     bool saving2 : 0x371380;
     bool inGame : 0x30EBC4;
+    bool inMenu : 0x47993C;
 }
 
 state("Game", "1.14c")
@@ -20,6 +22,7 @@ state("Game", "1.14c")
     bool saving : 0x36F760;
     bool saving2 : 0x370380;
     bool inGame : 0x30DBC4;
+    bool inMenu : 0x478884;
 }
 
 state("Game", "1.14d")
