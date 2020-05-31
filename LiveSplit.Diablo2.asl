@@ -52,7 +52,7 @@ init
 
 isLoading
 {
-    return current.loading || ((current.saving || current.saving2) && !current.inGame && !current.inMenu));
+    return current.loading || ((current.saving || current.saving2) && !current.inGame && !current.inMenu);
 }
 
 exit
