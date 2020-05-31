@@ -33,7 +33,7 @@ state("Game", "1.14d")
 
 update
 {
-    if (!old.loading && current.loading)
+    if (old.loading && !current.loading)
         vars.crashed = false;
 }
 
