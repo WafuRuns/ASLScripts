@@ -31,6 +31,12 @@ state("Game", "1.14d")
     bool inMenu : 0x379970;
 }
 
+update
+{
+    if (!old.loading && current.loading)
+        vars.crashed = false;
+}
+
 init
 {
     switch (modules.First().FileVersionInfo.FileVersion)
@@ -52,10 +58,11 @@ init
 
 isLoading
 {
-    return current.loading || ((current.saving || current.saving2) && !current.inGame && !current.inMenu);
+    return (current.loading || ((current.saving || current.saving2) && !current.inGame && !current.inMenu)) && !vars.crashed;
 }
 
 exit
 {
     timer.IsGameTimePaused = false;
+    vars.crashed = true;
 }
