@@ -15,7 +15,7 @@ split
 {
     if (old.location == 121 && current.location == 60)
         return true;
-    if (old.location == 90 && current.location == 119)
+    if (old.location == 6 && current.location == 119)
         return true;
     if (old.location == 18 && current.location == 87)
         return true;
