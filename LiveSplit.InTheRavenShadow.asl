@@ -8,25 +8,59 @@ state("havran")
 start
 {
     if (current.cutscene == 1 && old.cutscene == 0 && current.menu != 240)
+    {
+        vars.chapter = 0;
         return true;
+    }
 }
 
 split
 {
-    if (old.location == 121 && current.location == 60)
-        return true;
-    if (old.location == 6 && current.location == 119)
-        return true;
-    if (old.location == 18 && current.location == 87)
-        return true;
-    if (old.location == 87 && current.location == 67)
-        return true;
-    if (old.location == 217 && current.location == 50)
-        return true;
-    if (old.location == 44 && current.location == 57)
-        return true;
-    if (old.location == 70 && current.location == 33)
-        return true;
+    switch ((int)vars.chapter)
+    {
+        case 0:
+            if (current.location == 60) {
+                vars.chapter++;
+                return true;
+            }
+            break;
+        case 1:
+            if (current.location == 119) {
+                vars.chapter++;
+                return true;
+            }
+            break;
+        case 2:
+            if (current.location == 87) {
+                vars.chapter++;
+                return true;
+            }
+            break;
+        case 3:
+            if (current.location == 67) {
+                vars.chapter++;
+                return true;
+            }
+            break;
+        case 4:
+            if (current.location == 50) {
+                vars.chapter++;
+                return true;
+            }
+            break;
+        case 5:
+            if (current.location == 57) {
+                vars.chapter++;
+                return true;
+            }
+            break;
+        case 6:
+            if (current.location == 33) {
+                vars.chapter++;
+                return true;
+            }
+            break;
+    }
     if (current.location == 160 && old.cutscene == 0 && current.cutscene == 1)
         return true;
 }
