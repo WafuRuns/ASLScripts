@@ -10,11 +10,18 @@ state("mafiadefinitiveedition", "2")
     string10 chapter : 0x63CC4B8, 0x20;
 }
 
+state("mafiadefinitiveedition", "3")
+{
+    byte loading : 0x6442E60, 0x10, 0x18;
+    string10 chapter : 0x63DC4B8, 0x20;
+}
+
 startup
 {
     settings.Add("ver", true, "Version (pick only one!)");
     settings.Add("verup", true, "Unpatched (25/9/2020)", "ver");
     settings.Add("ver7102020", false, "Patch 1 (7/10/2020)", "ver");
+    settings.Add("ver11112020", false, "Patch 2 (11/11/2020)", "ver");
     vars.chapters = new List<string>() {"0_taxi_cp_", "0_molotov_", "0_motel_cp",
                                         "0_race_cp_", "0_sarah_cp", "0_hoodlums",
                                         "0_brothel_", "00_farm_cp", "10_omerta_",
@@ -35,6 +42,10 @@ init
     }
     if (settings["ver7102020"]) {
         version = "2";
+        return;
+    }
+    if (settings["ver11112020"]) {
+        version = "3";
         return;
     }
 }
