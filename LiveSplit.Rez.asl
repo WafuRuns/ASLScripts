@@ -2,14 +2,14 @@ state("Øež")
 {
     int mission : 0x7CA1C;
     bool inGame : "WMADMOD.DLL", 0x9D184;
-    int levelLoading : 0x65270, 0xB0, 0x494;
+    int levelLoading : 0x159B4, 0x338, 0x164, 0xF88;
 }
 
 state("Řež")
 {
     int mission : 0x7CA1C;
     bool inGame : "WMADMOD.DLL", 0x9D184;
-    int levelLoading : 0x65270, 0xB0, 0x494;
+    int levelLoading : 0x159B4, 0x338, 0x164, 0xF88;
 }
 
 start
