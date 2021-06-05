@@ -59,7 +59,7 @@ init
 split
 {
     if (settings["endsplit"]) {
-        if (current.level == "level4")
+        if (vars.levelNum == 23)
             return current.cutscene == 1 && old.cutscene == 0;
     }
     if ("level" + vars.levels[vars.levelNum] == current.level) {
