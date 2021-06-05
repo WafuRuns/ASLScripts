@@ -39,6 +39,7 @@ update
 
 start
 {
+    vars.levelNum = 0;
     return current.cutscene == 0 && old.cutscene == 1;
 }
 
