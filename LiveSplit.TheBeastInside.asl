@@ -55,7 +55,7 @@ split
 
 isLoading
 {
-    return current.loading == 1 || current.loading = null;
+    return current.loading == 1 || current.loading == null;
 }
 
 exit
