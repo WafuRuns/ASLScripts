@@ -63,8 +63,8 @@ init
 
 update
 {
-    print(chapter);
-    print(loading.ToString());
+    print(current.chapter);
+    print(current.loading.ToString());
 }
 
 start
