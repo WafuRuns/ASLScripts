@@ -61,12 +61,6 @@ init
     }
 }
 
-update
-{
-    print(current.chapter);
-    print(current.loading.ToString());
-}
-
 start
 {
     if (current.chapter == "t_omg)") {
