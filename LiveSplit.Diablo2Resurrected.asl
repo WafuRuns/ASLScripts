@@ -20,8 +20,10 @@ update
             ptr = scanner.Scan(vars.scanTarget);
             if (ptr != IntPtr.Zero) break;
         }
-        vars.watchers.Add(new MemoryWatcher<bool>(ptr) { Name = "playing" });
-        vars.exit = false;
+        if (ptr != IntPtr.Zero) {
+            vars.watchers.Add(new MemoryWatcher<bool>(ptr) { Name = "playing" });
+            vars.exit = false;
+        }
     }
     vars.watchers.UpdateAll(game);
 }
