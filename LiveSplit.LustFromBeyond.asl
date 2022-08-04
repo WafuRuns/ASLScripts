@@ -4,13 +4,13 @@ init
 {
     vars.scanTarget = new SigScanTarget(17, "55488BEC4883EC30488975F8488BF148B8????????????????488B08669049BB????????????????41FFD385C07429");
     IntPtr ptr = IntPtr.Zero;
-	foreach (var page in game.MemoryPages()) {
-		var scanner = new SignatureScanner(game, page.BaseAddress, (int)page.RegionSize);
-		ptr = scanner.Scan(vars.scanTarget);		
-		if (ptr != IntPtr.Zero) {
-			break;
-		}
-	}
+    foreach (var page in game.MemoryPages()) {
+        var scanner = new SignatureScanner(game, page.BaseAddress, (int)page.RegionSize);
+        ptr = scanner.Scan(vars.scanTarget);		
+        if (ptr != IntPtr.Zero) {
+            break;
+        }
+    }
     if (ptr == IntPtr.Zero)
         print("Didn't work."); //make this exception
     IntPtr instancePtr = (IntPtr) BitConverter.ToInt64(game.ReadBytes(ptr, 8), 0);
