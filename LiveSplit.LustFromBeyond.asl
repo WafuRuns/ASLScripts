@@ -11,8 +11,6 @@ init
             break;
         }
     }
-    if (ptr == IntPtr.Zero)
-        print("Didn't work."); //make this exception
     IntPtr instancePtr = (IntPtr) BitConverter.ToInt64(game.ReadBytes(ptr, 8), 0);
     vars.watchers = new MemoryWatcherList();
     vars.watchers.Add(new MemoryWatcher<bool>(new DeepPointer(instancePtr, 0x20, 0x53)) { Name = "gameIsStoppedByLoading" });
