@@ -1,3 +1,10 @@
+state("arx", "1.2.1")
+{
+    float progressBar : 0x610748;
+    byte cutscene : 0x6107F4;
+    string7 level : 0x3318B0, 0xD;
+}
+
 state("arx", "1.1.2")
 {
     float progressBar : 0x45A86C;
@@ -45,6 +52,8 @@ start
 
 init
 {
+    if (modules.First().ModuleMemorySize == 6795264)
+        version = "1.2.1";
     if (modules.First().ModuleMemorySize == 8790016)
         version = "1.1.2";
     if (modules.First().ModuleMemorySize == 8925184)
