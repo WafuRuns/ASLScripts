@@ -1,8 +1,3 @@
-state("arx", "steam")
-{
-    float progressBar : 0xA35FC, 0x860;
-}
-
 state("arx", "1.2.1")
 {
     float progressBar : 0x610748;
@@ -50,11 +45,9 @@ update
 }
 
 start
-{   
-    if (version != "steam") {
-        vars.levelNum = 0;
-        return current.cutscene == 0 && old.cutscene == 1;
-    }
+{
+    vars.levelNum = 0;
+    return current.cutscene == 0 && old.cutscene == 1;
 }
 
 init
@@ -67,9 +60,6 @@ init
         version = "1.0.3";
     if (modules.First().ModuleMemorySize == 9023488)
         version = "1.0";
-    if (modules.First().ModuleMemorySize == 7348224) {
-        version = "steam";
-    }
     vars.levelNum = timer.CurrentSplitIndex;
     if (vars.levelNum < 0)
         vars.levelNum = 0;
@@ -77,15 +67,13 @@ init
 
 split
 {
-    if (version != "steam") {
-        if (settings["endsplit"]) {
-            if (vars.levelNum == 23)
-                return current.cutscene == 1 && old.cutscene == 0;
-        }
-        if ("level" + vars.levels[vars.levelNum] == current.level) {
-            vars.levelNum++;
-            return true;
-        }
+    if (settings["endsplit"]) {
+        if (vars.levelNum == 23)
+            return current.cutscene == 1 && old.cutscene == 0;
+    }
+    if ("level" + vars.levels[vars.levelNum] == current.level) {
+        vars.levelNum++;
+        return true;
     }
 }
 
