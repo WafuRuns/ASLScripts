@@ -1,8 +1,15 @@
-state("TheBeastInside-Win64-Shipping")
+state("TheBeastInside-Win64-Shipping", "1.03")
 {
     byte loading : 0x2C64900, 0xC0, 0x8, 0x2C8;
     string32 chapter: 0x2C4DA58, 0x7C8, 0x28;
     byte control : 0x2C4EED0, 0x30, 0x348, 0xBA5;
+}
+
+state("TheBeastInside-Win64-Shipping", "1.05")
+{
+    byte loading : 0x2BFBA60, 0xC0, 0x8, 0x2C8;
+    string32 chapter: 0x2BE4BD8, 0x7C8, 0x28;
+    byte control : 0x2BE6050, 0x30, 0x348, 0xBA5;
 }
 
 startup
@@ -24,10 +31,16 @@ startup
     foreach (var tag in vars.missions) {
         settings.Add(tag.Key, true, tag.Value);
     }
+    settings.Add("v103", false, 'Version 1.03');
 }
 
 init
 {
+    if (settings["v103"]) {
+        version = "1.03";
+    } else {
+        version = "1.05";
+    }
     vars.endSplit = 0;
 }
 
