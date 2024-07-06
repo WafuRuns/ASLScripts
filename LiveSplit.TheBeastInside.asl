@@ -31,7 +31,7 @@ startup
     foreach (var tag in vars.missions) {
         settings.Add(tag.Key, true, tag.Value);
     }
-    settings.Add("v103", false, 'Version 1.03');
+    settings.Add("v103", false, "Version 1.03");
 }
 
 init
