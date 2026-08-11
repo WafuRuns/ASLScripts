@@ -118,10 +118,12 @@ async fn main() {
                         }
 
                         if let Some(mission_value) = mission_state {
-                            let mission = String::from_utf16_lossy(&mission_value);
-                            if mission.starts_with(MISSIONS[mission_index]) {
-                                timer::split();
-                                mission_index += 1;
+                            if mission_index < MISSIONS.len() {
+                                let mission = String::from_utf16_lossy(&mission_value);
+                                if mission.starts_with(MISSIONS[mission_index]) {
+                                    timer::split();
+                                    mission_index += 1;
+                                }
                             }
                         }
 
