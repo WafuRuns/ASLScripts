@@ -10,9 +10,20 @@ asr::async_main!(stable);
 
 #[derive(Gui)]
 struct Settings {
-    /// TODO: Add settings
+    /// Man of Honor
+    #[default = false]
+    moh: bool,
+
+    /// Version
+    #[heading_level = 1]
+    _version_header: asr::settings::gui::Title,
+
+    /// Latest
     #[default = true]
-    my_setting: bool,
+    version_latest: bool,
+    /// 4 December 2025
+    #[default = false]
+    version_4_dec_2025: bool,
 }
 
 struct PointerPath {
@@ -25,18 +36,46 @@ struct GameState {
     mission: PointerPath,
 }
 
-// TODO: Add more versions, currently only supports manifest ID 3121778726057603637
 // Signature scans would be ideal, the game's stubborn and crashes debuggers
-const GAME_STATE: GameState = GameState {
-    is_loading: PointerPath {
-        shift: 0xB036DE0,
-        offsets: &[0x0, 0x18, 0x48],
-    },
-    mission: PointerPath {
-        shift: 0xB1C93D8,
-        offsets: &[0x8, 0x8, 0x290, 0x40, 0x8, 0x48, 0x0],
-    },
-};
+enum Version {
+    VLatest,
+    V4Dec2025,
+}
+
+impl Version {
+    fn get_from_settings(settings: &Settings) -> Self {
+        if settings.version_4_dec_2025 {
+            Version::V4Dec2025
+        } else {
+            Version::VLatest
+        }
+    }
+
+    fn game_state(&self) -> GameState {
+        match self {
+            Version::VLatest => GameState {
+                is_loading: PointerPath {
+                    shift: 0xAF38C10,
+                    offsets: &[0x0, 0x18, 0xE0],
+                },
+                mission: PointerPath {
+                    shift: 0xB1CF468,
+                    offsets: &[0x8, 0x8, 0x290, 0x40, 0x8, 0x48, 0x0],
+                },
+            },
+            Version::V4Dec2025 => GameState {
+                is_loading: PointerPath {
+                    shift: 0xB036DE0,
+                    offsets: &[0x0, 0x18, 0x48],
+                },
+                mission: PointerPath {
+                    shift: 0xB1C93D8,
+                    offsets: &[0x8, 0x8, 0x290, 0x40, 0x8, 0x48, 0x0],
+                },
+            },
+        }
+    }
+}
 
 impl PointerPath {
     fn read<T: bytemuck::Pod>(&self, process: &Process, base: Address) -> Option<T> {
@@ -79,6 +118,11 @@ const MISSIONS: &[&str] = &[
     "Plotline.Main.ch_140_showdown",
 ];
 
+const MOH_MISSIONS: &[&str] = &[
+    "Plotline.Main.ch_055_intermezzo_a",
+    "Plotline.Main.ch_055_intermezzo_b",
+];
+
 async fn main() {
     let mut settings = Settings::register();
     let mut mission_index = 0;
@@ -92,6 +136,10 @@ async fn main() {
                 loop {
                     settings.update();
 
+                    let version = Version::get_from_settings(&settings);
+                    let game_state = version.game_state();
+                    let missions: &[&str] = if settings.moh { MOH_MISSIONS } else { MISSIONS };
+
                     let module_address = match process.get_module_range("MafiaTheOldCountry.exe") {
                         Ok(range) => range.0,
                         Err(_) => {
@@ -102,8 +150,8 @@ async fn main() {
 
                     loop {
                         let is_loading_state = is_loading_watcher
-                            .update(GAME_STATE.is_loading.read::<u8>(&process, module_address));
-                        let mission_state = GAME_STATE
+                            .update(game_state.is_loading.read::<u8>(&process, module_address));
+                        let mission_state = game_state
                             .mission
                             .read::<[u16; 100]>(&process, module_address);
 
@@ -118,9 +166,9 @@ async fn main() {
                         }
 
                         if let Some(mission_value) = mission_state {
-                            if mission_index < MISSIONS.len() {
+                            if mission_index < missions.len() {
                                 let mission = String::from_utf16_lossy(&mission_value);
-                                if mission.starts_with(MISSIONS[mission_index]) {
+                                if mission.starts_with(missions[mission_index]) {
                                     timer::split();
                                     mission_index += 1;
                                 }
@@ -135,7 +183,7 @@ async fn main() {
                             {
                                 if is_loading_value.old == 1 && is_loading_value.current == 1 {
                                     let mission = String::from_utf16_lossy(&mission_value);
-                                    if mission.starts_with(MISSIONS[mission_index]) {
+                                    if mission.starts_with(missions[mission_index]) {
                                         timer::start();
                                         mission_index += 1;
                                     }
