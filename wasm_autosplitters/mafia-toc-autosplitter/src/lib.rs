@@ -24,6 +24,9 @@ struct Settings {
     /// 4 December 2025
     #[default = false]
     version_4_dec_2025: bool,
+    /// 14 August 2026
+    #[default = false]
+    version_14_aug_2026: bool,
 }
 
 struct PointerPath {
@@ -40,12 +43,15 @@ struct GameState {
 enum Version {
     VLatest,
     V4Dec2025,
+    V14Aug2026,
 }
 
 impl Version {
     fn get_from_settings(settings: &Settings) -> Self {
         if settings.version_4_dec_2025 {
             Version::V4Dec2025
+        } else if settings.version_14_aug_2026 {
+            Version::V14Aug2026
         } else {
             Version::VLatest
         }
@@ -54,6 +60,17 @@ impl Version {
     fn game_state(&self) -> GameState {
         match self {
             Version::VLatest => GameState {
+                // To find in Cheat Engine, 00 00 00 = in game, 01 01 01 = loading
+                is_loading: PointerPath {
+                    shift: 0xAF3AC10,
+                    offsets: &[0x0, 0x18, 0xE0],
+                },
+                mission: PointerPath {
+                    shift: 0xB1D1468,
+                    offsets: &[0x8, 0x8, 0x290, 0x40, 0x8, 0x48, 0x0],
+                },
+            },
+            Version::V14Aug2026 => GameState {
                 is_loading: PointerPath {
                     shift: 0xAF38C10,
                     offsets: &[0x0, 0x18, 0xE0],
