@@ -17,19 +17,31 @@ struct Settings {
     /// Reset
     #[default = false]
     reset: bool,
+    /// Linux
+    #[default = false]
+    linux: bool,
 }
 
 // NOTE: Official autospltiter
-fn get_hook(process: &Process) -> Option<Address> {
+fn get_hook(process: &Process, linux: bool) -> Option<Address> {
     const HOOK_SIGNATURE: Signature<13> = Signature::new("4D 4F 4C 44 52 49 53 45 5F 48 4F 4F 4B");
 
     // TODO: Experimental, for some reason, get_module_range returns a different size than expected
     const BASE: u64 = 0x00000000;
-    const RANGE: u64 = 0xFFFFFFFF;
+    const RANGE: u64 = 0xFFFFFFFFFFFFF;
 
-    let signature_address = HOOK_SIGNATURE.scan_process_range(process, (BASE, RANGE))?;
+    // let base = process.get_main_module_range().ok()?;
+    // let signature_address = HOOK_SIGNATURE.scan_process_range(process, (base.0, RANGE))?;
+    // return Some(signature_address + 13);
 
-    Some(signature_address + 13)
+    if linux {
+        let base = process.get_main_module_range().ok()?;
+        let signature_address = HOOK_SIGNATURE.scan_process_range(process, (base.0, RANGE))?;
+        return Some(signature_address + 13);
+    } else {
+        let signature_address = HOOK_SIGNATURE.scan_process_range(process, (BASE, RANGE))?;
+        return Some(signature_address + 13);
+    }
 }
 
 // NOTE: Legacy autosplitter
@@ -144,25 +156,30 @@ const GAME_STATE: GameState = GameState {
 };
 
 async fn main() {
-    // TODO: Settings
     let mut settings = Settings::register();
+    settings.update();
 
     loop {
-        let process = Process::wait_attach("MOLDRISE.exe").await;
+        let process = asr::future::retry(|| {
+            ["MOLDRISE.exe", "MOLDRISE.x86_64"]
+                .into_iter()
+                .find_map(Process::attach)
+        })
+        .await;
         process
             .until_closes(async {
-                let module_address = match process.get_module_range("MOLDRISE.exe") {
-                    Ok(range) => range.0,
-                    Err(_) => {
-                        next_tick().await;
-                        return;
-                    }
-                };
                 loop {
                     settings.update();
 
                     if settings.legacy {
-                        asr::print_message("legacy");
+                        let module_address = match process.get_module_range("MOLDRISE.exe") {
+                            Ok(range) => range.0,
+                            Err(_) => {
+                                next_tick().await;
+                                return;
+                            }
+                        };
+
                         let mut takeover_movement_watcher: Watcher<f64> = Watcher::new();
                         let mut rotation_x_watcher: Watcher<f32> = Watcher::new();
                         let mut rotation_y_watcher: Watcher<f32> = Watcher::new();
@@ -240,7 +257,7 @@ async fn main() {
                         }
                     } else {
                         // NOTE: Official autosplitter
-                        let hook_address = match get_hook(&process) {
+                        let hook_address = match get_hook(&process, settings.linux) {
                             Some(hook) => hook,
                             None => {
                                 next_tick().await;
