@@ -11,12 +11,28 @@ asr::async_main!(stable);
 
 #[derive(Gui)]
 struct Settings {
-    /// TODO
-    #[default = true]
-    my_setting: bool,
-    // TODO: Change these settings.
+    /// Legacy autosplitter
+    #[default = false]
+    legacy: bool,
+    /// Reset
+    #[default = false]
+    reset: bool,
 }
 
+// NOTE: Official autospltiter
+fn get_hook(process: &Process) -> Option<Address> {
+    const HOOK_SIGNATURE: Signature<13> = Signature::new("4D 4F 4C 44 52 49 53 45 5F 48 4F 4F 4B");
+
+    // TODO: Experimental, for some reason, get_module_range returns a different size than expected
+    const BASE: u64 = 0x00000000;
+    const RANGE: u64 = 0xFFFFFFFF;
+
+    let signature_address = HOOK_SIGNATURE.scan_process_range(process, (BASE, RANGE))?;
+
+    Some(signature_address + 13)
+}
+
+// NOTE: Legacy autosplitter
 fn get_scene_tree(process: &Process, module_address: Address) -> Option<Address> {
     const SIGNATURE: Signature<30> = Signature::new(
         "48 ?? ?? ?? ?? ?? ?? 48 ?? ?? ?? ?? E8 ?? ?? ?? ?? 48 ?? ?? 48 ?? ?? ?? 5B C3 48 ?? ?? 48",
@@ -41,6 +57,7 @@ fn get_scene_tree(process: &Process, module_address: Address) -> Option<Address>
     Some(Address::from(scene_tree_val))
 }
 
+// NOTE: Legacy autosplitter
 fn get_root(process: &Process, scene_tree: Address) -> Option<Address> {
     let root_val: u64 = process.read(scene_tree + 0x328).ok()?;
 
@@ -51,6 +68,7 @@ fn get_root(process: &Process, scene_tree: Address) -> Option<Address> {
     Some(Address::from(root_val))
 }
 
+// NOTE: Legacy autosplitter
 fn get_base(process: &Process, root: Address) -> Option<Address> {
     let base: u64 = process.read(root + 0x188).ok()?;
 
@@ -143,79 +161,116 @@ async fn main() {
                 loop {
                     settings.update();
 
-                    let mut takeover_movement_watcher: Watcher<f64> = Watcher::new();
-                    let mut rotation_x_watcher: Watcher<f32> = Watcher::new();
-                    let mut rotation_y_watcher: Watcher<f32> = Watcher::new();
-                    let mut position_x_watcher: Watcher<f32> = Watcher::new();
-                    let mut position_y_watcher: Watcher<f32> = Watcher::new();
-                    let mut position_z_watcher: Watcher<f32> = Watcher::new();
+                    if settings.legacy {
+                        asr::print_message("legacy");
+                        let mut takeover_movement_watcher: Watcher<f64> = Watcher::new();
+                        let mut rotation_x_watcher: Watcher<f32> = Watcher::new();
+                        let mut rotation_y_watcher: Watcher<f32> = Watcher::new();
+                        let mut position_x_watcher: Watcher<f32> = Watcher::new();
+                        let mut position_y_watcher: Watcher<f32> = Watcher::new();
+                        let mut position_z_watcher: Watcher<f32> = Watcher::new();
 
-                    let base = match get_scene_tree(&process, module_address)
-                        .and_then(|scene_tree| get_root(&process, scene_tree))
-                        .and_then(|root| get_base(&process, root))
-                    {
-                        Some(b) => b,
-                        None => {
+                        let base = match get_scene_tree(&process, module_address)
+                            .and_then(|scene_tree| get_root(&process, scene_tree))
+                            .and_then(|root| get_base(&process, root))
+                        {
+                            Some(b) => b,
+                            None => {
+                                next_tick().await;
+                                continue;
+                            }
+                        };
+
+                        loop {
+                            let rotation_x_state = rotation_x_watcher
+                                .update(GAME_STATE.rotation_x.read::<f32>(&process, base));
+                            let rotation_y_state = rotation_y_watcher
+                                .update(GAME_STATE.rotation_y.read::<f32>(&process, base));
+                            let position_x_state = position_x_watcher
+                                .update(GAME_STATE.position_x.read::<f32>(&process, base));
+                            let position_y_state = position_y_watcher
+                                .update(GAME_STATE.position_y.read::<f32>(&process, base));
+                            let position_z_state = position_z_watcher
+                                .update(GAME_STATE.position_z.read::<f32>(&process, base));
+                            let takeover_movement_state = takeover_movement_watcher
+                                .update(GAME_STATE.takover_movement.read::<f64>(&process, base));
+
+                            if timer::state() == TimerState::Running {
+                                if let Some(takeover_movement) = takeover_movement_state {
+                                    if takeover_movement.old == 1.5
+                                        && takeover_movement.current == 0.6
+                                    {
+                                        timer::split();
+                                    }
+                                } else {
+                                    break;
+                                }
+                            }
+
+                            if timer::state() == TimerState::NotRunning {
+                                if let (
+                                    Some(rotation_x),
+                                    Some(rotation_y),
+                                    Some(position_x),
+                                    Some(position_y),
+                                    Some(position_z),
+                                ) = (
+                                    rotation_x_state,
+                                    rotation_y_state,
+                                    position_x_state,
+                                    position_y_state,
+                                    position_z_state,
+                                ) {
+                                    if (rotation_x.old == 0.0 && rotation_x.current != 0.0)
+                                        || (rotation_y.old == 2.870473146
+                                            && rotation_y.current != 2.870473146)
+                                        || (position_x.old == 1.343892694
+                                            && position_x.current != 1.343892694)
+                                        || (position_y.old == 4.267927647
+                                            && position_y.current != 4.267927647)
+                                        || (position_z.old == -2.671685219
+                                            && position_z.current != -2.671685219)
+                                    {
+                                        timer::start();
+                                    }
+                                }
+                            }
+
                             next_tick().await;
-                            continue;
                         }
-                    };
-
-                    loop {
-                        let rotation_x_state = rotation_x_watcher
-                            .update(GAME_STATE.rotation_x.read::<f32>(&process, base));
-                        let rotation_y_state = rotation_y_watcher
-                            .update(GAME_STATE.rotation_y.read::<f32>(&process, base));
-                        let position_x_state = position_x_watcher
-                            .update(GAME_STATE.position_x.read::<f32>(&process, base));
-                        let position_y_state = position_y_watcher
-                            .update(GAME_STATE.position_y.read::<f32>(&process, base));
-                        let position_z_state = position_z_watcher
-                            .update(GAME_STATE.position_z.read::<f32>(&process, base));
-                        let takeover_movement_state = takeover_movement_watcher
-                            .update(GAME_STATE.takover_movement.read::<f64>(&process, base));
-
-                        if timer::state() == TimerState::Running {
-                            if let Some(takeover_movement) = takeover_movement_state {
-                                if takeover_movement.old == 1.5 && takeover_movement.current == 0.6
-                                {
-                                    timer::split();
-                                }
-                            } else {
-                                break;
+                    } else {
+                        // NOTE: Official autosplitter
+                        let hook_address = match get_hook(&process) {
+                            Some(hook) => hook,
+                            None => {
+                                next_tick().await;
+                                continue;
                             }
-                        }
+                        };
 
-                        if timer::state() == TimerState::NotRunning {
-                            if let (
-                                Some(rotation_x),
-                                Some(rotation_y),
-                                Some(position_x),
-                                Some(position_y),
-                                Some(position_z),
-                            ) = (
-                                rotation_x_state,
-                                rotation_y_state,
-                                position_x_state,
-                                position_y_state,
-                                position_z_state,
-                            ) {
-                                if (rotation_x.old == 0.0 && rotation_x.current != 0.0)
-                                    || (rotation_y.old == 2.870473146
-                                        && rotation_y.current != 2.870473146)
-                                    || (position_x.old == 1.343892694
-                                        && position_x.current != 1.343892694)
-                                    || (position_y.old == 4.267927647
-                                        && position_y.current != 4.267927647)
-                                    || (position_z.old == -2.671685219
-                                        && position_z.current != -2.671685219)
-                                {
-                                    timer::start();
+                        let mut state_watcher: Watcher<i8> = Watcher::new();
+
+                        loop {
+                            let state = state_watcher.update(process.read::<i8>(hook_address).ok());
+
+                            if let Some(state) = state {
+                                if state.current != state.old {
+                                    if state.current == 0 && settings.reset {
+                                        timer::reset();
+                                    }
+
+                                    if state.current == 1 {
+                                        timer::start();
+                                    }
+
+                                    if state.current == 2 {
+                                        timer::split();
+                                    }
                                 }
                             }
-                        }
 
-                        next_tick().await;
+                            next_tick().await;
+                        }
                     }
                 }
             })
